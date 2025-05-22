@@ -1,42 +1,40 @@
-import React, { useEffect, useState, useRef } from 'react';
 import { subscribe, unsubscribe } from './resources/API';
-
-const getName = (id: string): string => `Источник ${id}`;
+import React, { useEffect, useRef, useState } from 'react';
 
 interface Props {
     sourceId: string;
 }
 
-export const SourceInfo: React.FC<Props> = ({ sourceId }) => {
+export const Effects: React.FC<Props> = ({ sourceId }) => {
     const [message, setMessage] = useState<number>(-1);
-    const [name, setName] = useState<string>('');
-
     const callbackRef = useRef<(payload: number) => void>(() => {});
 
     useEffect(() => {
-        setName(getName(sourceId));
         setMessage(-1);
 
-        const handleMessage = (payload: number) => {
+        const handler = (payload: number) => {
             setMessage(payload);
         };
 
-        callbackRef.current = handleMessage;
+        // Сохраняем ссылку на текущий callback
+        callbackRef.current = handler;
 
-        subscribe(sourceId, handleMessage);
+        // Подписываемся на новый источник
+        subscribe(sourceId, handler);
 
+        // Отписка при изменении sourceId или размонтировании
         return () => {
             try {
                 unsubscribe(sourceId, callbackRef.current);
             } catch (e) {
-                console.error('Ошибка отписки:', e);
+                console.error(e);
             }
         };
     }, [sourceId]);
 
     return (
         <div>
-            {name}: {message}
+            {sourceId}: {message}
         </div>
     );
 };
